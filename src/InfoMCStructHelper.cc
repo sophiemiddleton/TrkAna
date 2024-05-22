@@ -123,7 +123,7 @@ namespace mu2e {
 
     const SimPartStub& simPart = kseedmc.simParticle(tshmc._spindex);
     tshinfomc.pdg = simPart._pdg;
-    tshinfomc.startCode = simPart._proc;
+    tshinfomc.startCode = simPart._startCode;
     tshinfomc.gen = simPart._gid.id();
     tshinfomc.rel = simPart._rel;
     tshinfomc.earlyend = tshmc._earlyend._end;
