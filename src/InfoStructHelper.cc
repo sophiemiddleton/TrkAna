@@ -5,7 +5,6 @@
 #include "TrkAna/inc/InfoStructHelper.hh"
 #include "Offline/RecoDataProducts/inc/TrkStrawHitSeed.hh"
 #include "KinKal/Trajectory/CentralHelix.hh"
-#include "Offline/TrackerGeom/inc/Tracker.hh"
 #include "Offline/Mu2eKinKal/inc/WireHitState.hh"
 #include <cmath>
 #include <limits>
@@ -14,10 +13,10 @@ namespace mu2e {
   void InfoStructHelper::fillHitCount(StrawHitFlagCollection const& shfC, HitCount& hitcount) {
     hitcount.nsd = shfC.size();
     for(const auto& shf : shfC) {
-      if(shf.hasAllProperties(StrawHitFlag::energysel))++hitcount.nesel;
-      if(shf.hasAllProperties(StrawHitFlag::radsel))++hitcount.nrsel;
-      if(shf.hasAllProperties(StrawHitFlag::timesel))++hitcount.ntsel;
-      if(shf.hasAllProperties(StrawHitFlag::bkg))++hitcount.nbkg;
+      if(shf.hasAnyProperty(StrawHitFlag::energysel))++hitcount.nesel;
+      if(shf.hasAnyProperty(StrawHitFlag::radsel))++hitcount.nrsel;
+      if(shf.hasAnyProperty(StrawHitFlag::timesel))++hitcount.ntsel;
+      if(shf.hasAnyProperty(StrawHitFlag::bkg))++hitcount.nbkg;
     }
   }
 
@@ -31,28 +30,32 @@ namespace mu2e {
   void InfoStructHelper::fillTrkInfo(const KalSeed& kseed,std::vector<TrkInfo>& trkinfos) {
     TrkInfo trkinfo;
 
-    if(kseed.status().hasAllProperties(TrkFitFlag::kalmanConverged))
+    if(kseed.status().hasAnyProperty(TrkFitFlag::kalmanConverged))
       trkinfo.status = 1;
-    else if(kseed.status().hasAllProperties(TrkFitFlag::kalmanOK))
+    else if(kseed.status().hasAnyProperty(TrkFitFlag::kalmanOK))
       trkinfo.status = 2;
     else
       trkinfo.status = -1;
 
-    if(kseed.status().hasAllProperties(TrkFitFlag::FitOK)){
+    if(kseed.status().hasAnyProperty(TrkFitFlag::FitOK)){
       trkinfo.goodfit = 1;
     } else
       trkinfo.goodfit = 0;
 
-    if(kseed.status().hasAllProperties(TrkFitFlag::CPRHelix))
+    if(kseed.status().hasAnyProperty(TrkFitFlag::MPRHelix))
+      trkinfo.seedalg = 3;
+    else if(kseed.status().hasAnyProperty(TrkFitFlag::APRHelix))
+      trkinfo.seedalg = 2;
+    else if(kseed.status().hasAnyProperty(TrkFitFlag::CPRHelix))
       trkinfo.seedalg = 1;
-    else if(kseed.status().hasAllProperties(TrkFitFlag::TPRHelix))
+    else if(kseed.status().hasAnyProperty(TrkFitFlag::TPRHelix))
       trkinfo.seedalg = 0;
 
-    if(kseed.status().hasAllProperties(TrkFitFlag::KKLoopHelix)){
+    if(kseed.status().hasAnyProperty(TrkFitFlag::KKLoopHelix)){
       trkinfo.fitalg =1;
-    } else if(kseed.status().hasAllProperties(TrkFitFlag::KKCentralHelix))
+    } else if(kseed.status().hasAnyProperty(TrkFitFlag::KKCentralHelix))
       trkinfo.fitalg = 2;
-    else if(kseed.status().hasAllProperties(TrkFitFlag::KKLine))
+    else if(kseed.status().hasAnyProperty(TrkFitFlag::KKLine))
       trkinfo.fitalg = 3;
     else
       trkinfo.fitalg = 0;
@@ -71,7 +74,7 @@ namespace mu2e {
     trkinfo.firsthit = kseed.hits().back()._ptoca;
     trkinfo.lasthit = kseed.hits().front()._ptoca;
     for(auto const& hit : kseed.hits()) {
-      if(hit.flag().hasAllProperties(StrawHitFlag::active)){
+      if(hit.flag().hasAnyProperty(StrawHitFlag::active)){
         if( trkinfo.firsthit > hit._ptoca)trkinfo.firsthit = hit._ptoca;
         if( trkinfo.lasthit < hit._ptoca)trkinfo.lasthit = hit._ptoca;
       }
@@ -237,10 +240,8 @@ namespace mu2e {
     std::vector<TrkStrawHitInfo> tshinfos;
     // loop over hits
     static StrawHitFlag active(StrawHitFlag::active);
-    const Tracker& tracker = *GeomHandle<Tracker>();
     for(std::vector<TrkStrawHitSeed>::const_iterator ihit=kseed.hits().begin(); ihit != kseed.hits().end(); ++ihit) {
       TrkStrawHitInfo tshinfo;
-      auto const& straw = tracker.getStraw(ihit->strawId());
 
       tshinfo.state = ihit->_ambig;
       tshinfo.usetot = ihit->_kkshflag.hasAnyProperty(KKSHFlag::tot);
@@ -296,16 +297,11 @@ namespace mu2e {
       tshinfo.rdresidmvar   = ihit->_rdresidmvar;
       tshinfo.rdresidpvar   = ihit->_rdresidpvar;
 
-      // find nearest segment
-      auto ikseg = kseed.nearestSegment(ihit->_ptoca);
-      if(ikseg != kseed.segments().end()){
-        auto tdir(ikseg->momentum3().Unit());
-        tshinfo.wdot = tdir.Dot(straw.getDirection());
-      }
-      auto const& wiredir = straw.getDirection();
-      auto const& mid = straw.getMidPoint();
-      auto hpos = mid + wiredir*ihit->_wdist;
-      tshinfo.poca = XYZVectorF(hpos);
+      tshinfo.wdot = ihit->_wdot;
+      tshinfo.poca = ihit->_upoca;
+      tshinfo.ustrawdist = ihit->_ustrawdist;
+      tshinfo.ustrawphi = ihit->_ustrawphi;
+      tshinfo.uwirephi = ihit->_uwirephi;
 
       // count correlations with other TSH
       // OBSOLETE: replace this with a test for KinKal StrawHitClusters
@@ -390,10 +386,16 @@ namespace mu2e {
           hinfo.ncha++;
           hinfo.nsha += hh.nStrawHits();
         }
-        if( hptr->status().hasAllProperties(TrkFitFlag::TPRHelix))
-          hinfo.flag = 1;
-        else if( hptr->status().hasAllProperties(TrkFitFlag::CPRHelix))
+
+        if(hptr->status().hasAnyProperty(TrkFitFlag::MPRHelix))
+          hinfo.flag = 3;
+        else if(hptr->status().hasAnyProperty(TrkFitFlag::APRHelix))
           hinfo.flag = 2;
+        else if(hptr->status().hasAnyProperty(TrkFitFlag::CPRHelix))
+          hinfo.flag = 1;
+        else if(hptr->status().hasAnyProperty(TrkFitFlag::TPRHelix))
+          hinfo.flag = 0;
+
         hinfo.t0err = hptr->t0().t0Err();
         hinfo.mom = 0.299792*hptr->helix().momentum()*_bz0; //FIXME!
         hinfo.chi2xy = hptr->helix().chi2dXY();
