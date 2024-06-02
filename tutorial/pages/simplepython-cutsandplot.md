@@ -28,11 +28,11 @@ First import the relevant branch:
 import uproot
 import matplotlib.pyplot as plt
 import awkward as ak
+import numpy as np
 
 filename = pass0b.root
 trkana = uproot.open(filename:+":TrkAna/trkana")
-branches = trkana.arrays(filter_name="/demfit/")
-array_TRK = ak.flatten(branches, axis=None)
+array_TRK = trkana.arrays(filter_name="/demfit/")
 
 ```
 
