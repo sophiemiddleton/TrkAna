@@ -161,8 +161,11 @@ Now set up the Likelihood fit
     chFrame2->Draw();
     can2 -> Update();
     can2 -> SaveAs("nll.root");
-    return fitRes;
+    std::cout<<fitRes<<std::endl;
+
 ```
+
+Here you are using the migrad and hesse algorithms to minimze the negative log likelihood (nll). The likelihood is the combined Sig+DIO extended distribution.
 
 Plot the resulting fit:
  
@@ -172,20 +175,19 @@ Plot the resulting fit:
     RooPlot *chFrame = recomom.frame(Title(""));
     chMom.plotOn(chFrame, MarkerColor(kBlack), LineColor(kBlack), MarkerSize(0.5), Name("chMom"));
     fitFun.plotOn(chFrame, LineColor(kGreen), LineStyle(1), Name("combFit"));
-    fitFun.paramOn(chFrame,Layout(0.55));
-    
+ ```
+ you are plotting the fit function onto your histogrammed data.
+ 
+ Find the chisquare goodness of fit:
+ 
+ ```   
     float chiSq = chFrame->chiSquare(11);
     std::cout << "chi2: " << chiSq << "; Probability: " << Prob(chiSq, 151) << std::endl;
-    
-    TPaveLabel *pchi2 = new TPaveLabel(0.5, 0.70, 0.35, 0.80, Form("#chi^{2}/ndf = %4.2f", chiSq), "brNDC");
-    pchi2 -> SetFillStyle(0);
-    pchi2 -> SetBorderSize(0);
-    pchi2 -> SetTextSize(0.25);
-    pchi2 -> SetTextColor(kBlack);
-    pchi2 -> SetFillColor(kWhite);
-    chFrame -> addObject(pchi2);
+```
 
+set the axis labels, use a log so we can see relatively small signal:
 
+```
     chFrame -> SetYTitle("Events per 25 keV");
     chFrame -> SetXTitle("Reconstructed Mom at TrkEnt [MeV/c]");
     can -> Draw();
@@ -204,4 +206,5 @@ You should have two .root files: CombinedFitResult.root and nll.root. View these
 root *.root
 root [0] TBrowser p
 ```
+CombinedFitResult shows the data fitted with the green combined fit PDF. The nll.root shows how the negative log likelihood minimize on the yeild of signal events.
 
