@@ -9,12 +9,13 @@ import pyprint as prnt
 import pyselect as slct
 
 import awkward as ak
+import argparse
 
-def example_plotting():
+def example_plotting(filename):
   """ Simple demo function to run some of the utils """
   
   # Import the files
-  test_evn = evn.Import("/exp/mu2e/data/users/sophie/ensembles/MDS1/MDS1av0.root", "EventNtuple", "ntuple")
+  test_evn = evn.Import(str(filename), "EventNtuple", "ntuple")
 
   # Import code and extract branch
   treename = 'trksegs'
@@ -83,8 +84,12 @@ def example_plotting():
     out_path='h2_timevmom.png'
   )
   
-def main():
-  example_plotting()
+def main(args):
+  example_plotting(args.filename)
 
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser(description='command arguments', formatter_class=argparse.RawTextHelpFormatter)
+    parser.add_argument("--filename", type=str, default="/exp/mu2e/data/users/sophie/ensembles/MDS1/MDS1av0.root", help="filename")
+    args = parser.parse_args()
+    (args) = parser.parse_args()
+    main(args)
