@@ -39,17 +39,25 @@ namespace mu2e
           art::Handle<MCTrajectoryCollection> const& mcTrajectories,
           CrvHitInfoRecoCollection &recoInfo, CrvHitInfoMCCollection &MCInfo,
           CrvSummaryReco &recoSummary, CrvSummaryMC &MCSummary,
-          CrvPlaneInfoMCCollection &MCInfoPlane, double crvPlaneY,
+          std::vector<CrvPlaneInfoMCCollection> &MCInfoPlanes,
+          const std::vector<double> &crvPlaneCoords,
+          const std::vector<int> &crvPlaneAxes,
           art::Handle<PrimaryParticle> const& primary);
+
+      void FillCrvPulseHitIndices(
+          art::Handle<CrvCoincidenceClusterCollection> const& crvCoincidences,
+          art::Handle<CrvRecoPulseCollection> const& crvRecoPulses,
+          std::vector<int> &pulseHitIndices);
 
       void FillCrvPulseInfoCollections(
           art::Handle<CrvRecoPulseCollection> const& crvRecoPulses,
           art::Handle<CrvDigiMCCollection> const& crvDigiMCs,
           art::Handle<EventWindowMarker> const& ewmh,
+          const std::vector<int> &pulseHitIndices,
+          bool keepUnclusteredPulses,
           CrvPulseInfoRecoCollection &recoInfo, CrvHitInfoMCCollection &MCInfo);
 
       void FillCrvDigiInfoCollections(
-          art::Handle<CrvRecoPulseCollection> const& crvRecoPulses,
           art::Handle<CrvDigiCollection> const& crvDigis,
           CrvWaveformInfoCollection &digiInfo);
 
