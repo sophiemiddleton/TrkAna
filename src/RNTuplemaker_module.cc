@@ -29,6 +29,10 @@ public:
     using Comment = fhicl::Comment;
 
     fhicl::Atom<int> diagLevel{Name("diagLevel"), Comment("Diagnostic level"), 0};
+    fhicl::Atom<std::string> outputFileName{
+    Name("outputFileName"), 
+    Comment("Dedicated output root file for RNTuple"), 
+    "nts.owner.rntuple.version.root"};
     fhicl::Atom<art::InputTag> simsTag{
         Name("simsTag"), 
         Comment("InputTag for SimParticleCollection"), 
@@ -47,7 +51,7 @@ public:
 private:
   Config _conf;
   art::InputTag _simsTag;
-
+  std::string _outputFileName;
   std::unique_ptr<ROOT::Experimental::RNTupleWriter> writer_;
 
   // Scalar Fields bound to RNTuple Model (assumes single entry per event)
@@ -60,28 +64,29 @@ private:
 RNTuplemaker::RNTuplemaker(const Parameters& conf)
     : art::EDAnalyzer(conf),
       _conf(conf()),
-      _simsTag(conf().simsTag()) {
+      _simsTag(conf().simsTag()),
+      _outputFileName(conf().outputFileName()) {
   gErrorIgnoreLevel = kError;
   SetErrorHandler(DefaultErrorHandler);
 }
 
 void RNTuplemaker::beginJob() {
   auto model = ROOT::Experimental::RNTupleModel::Create();
-   art::ServiceHandle<art::TFileService> tfs;
+   //art::ServiceHandle<art::TFileService> tfs;
 
   fldHasElec_  = model->MakeField<int>("hasElec");
   fldElecPdg_   = model->MakeField<int>("elec_pdg");
   fldElecMom_   = model->MakeField<float>("elec_mom");
   fldElecTime_  = model->MakeField<float>("elec_time");
 
-  std::string filename = tfs->file().GetName();
+  //std::string filename = tfs->file().GetName();
 
-  tfs->file().Close();
+  //tfs->file().Close();
 
   writer_ = ROOT::Experimental::RNTupleWriter::Recreate(
       std::move(model), 
       "myNtuple", 
-      filename
+      _outputFileName
   );
 }
 

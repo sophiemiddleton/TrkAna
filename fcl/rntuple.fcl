@@ -17,6 +17,7 @@ physics :
     {
       module_type  : RNTuplemaker
       diagLevel    : 0
+      outputFileName : "rntuple.owner.description.version.sequencer.root"
     }
   }
   rntuplePath : [ rntuple ]
