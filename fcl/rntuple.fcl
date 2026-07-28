@@ -1,0 +1,30 @@
+#include "Offline/fcl/minimalMessageService.fcl"
+#include "Offline/fcl/standardProducers.fcl"
+#include "Offline/fcl/standardServices.fcl"
+#include "EventNtuple/fcl/prolog.fcl"
+
+process_name : EventNtuple
+
+source : { module_type : RootInput }
+
+services : @local::Services.Reco
+
+physics :
+{
+  analyzers :
+  {
+    rntuple :
+    {
+      module_type  : RNTuplemaker
+      diagLevel    : 0
+    }
+  }
+  rntuplePath : [ rntuple ]
+}
+
+
+physics.end_paths : [rntuplePath ]
+
+#include "Production/JobConfig/common/epilog.fcl"
+services.TFileService.fileName: "nts.owner.description.version.sequencer.root"
+

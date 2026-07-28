@@ -54,7 +54,22 @@ cet_build_plugin(EventNtupleMaker art::module
       art_root_io::TFileService_service
       ROOT::Postscript
 )
-
+cet_build_plugin(RNTuplemaker art::module
+    REG_SOURCE RNTuplemaker_module.cc
+    LIBRARIES REG
+      event-ntuple::eventntuple
+      Offline::MCDataProducts
+      Offline::RecoDataProducts
+      Offline::DataProducts
+      Offline::Mu2eUtilities
+      Offline::GeneralUtilities
+      art_root_io::TFileService_service
+      ROOT::Postscript
+      ROOT::RNTuple
+      ROOT::ROOTRNTuple
+      ROOT::RField
+      ROOT::RNTupleWriter
+)
 cet_build_plugin(BestCrvHitDeltaT art::module
     REG_SOURCE BestCrvHitDeltaT_module.cc
     LIBRARIES REG
