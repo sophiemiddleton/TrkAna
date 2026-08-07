@@ -1,0 +1,108 @@
+#include "art/Framework/Core/EDAnalyzer.h"
+#include "art/Framework/Services/Registry/ServiceHandle.h"
+#include "art_root_io/TFileService.h"
+
+// Framework includes.
+#include "art/Framework/Core/EDAnalyzer.h"
+#include "art/Framework/Principal/Event.h"
+#include "art/Framework/Principal/SubRun.h"
+#include "art/Framework/Principal/Handle.h"
+
+#include "TFile.h"
+#include "canvas/Utilities/InputTag.h"
+
+// ROOT & RNTuple headers
+#include "TError.h"
+#include "ROOT/RNTuple.hxx"
+#include "ROOT/RNTupleModel.hxx"
+#include "ROOT/RNTupleWriter.hxx"
+#include <memory>
+#include <random>
+
+// Mu2e Data Product Headers
+#include "Offline/MCDataProducts/inc/SimParticle.hh"
+
+namespace mu2e {
+
+class RNTuplemaker : public art::EDAnalyzer {
+public:
+  struct Config {
+    using Name = fhicl::Name;
+    using Comment = fhicl::Comment;
+
+    fhicl::Atom<art::InputTag> simsTag{
+        Name("simsTag"), 
+        Comment("InputTag for SimParticleCollection"), 
+        art::InputTag("compressRecoMCs")};
+  };
+
+  typedef art::EDAnalyzer::Table<Config> Parameters;
+
+  explicit RNTuplemaker(const Parameters& conf);
+  virtual ~RNTuplemaker() {}
+
+  void beginJob() override;
+  void analyze(const art::Event& e) override;
+
+private:
+  art::InputTag _simsTag;
+  std::unique_ptr<ROOT::Experimental::RNTupleWriter> writer_;
+  
+  // RNTuple field pointers (returned by MakeField and kept for writing)
+  std::shared_ptr<int>   fldEventId_;
+  std::shared_ptr<int>   fldHasElec_;
+  std::shared_ptr<int>   fldElecPdg_;
+  std::shared_ptr<float> fldElecMom_;
+  std::shared_ptr<float> fldElecTime_;
+  
+  // Random number generator for dummy data
+  std::mt19937 rng_;
+};
+
+RNTuplemaker::RNTuplemaker(const Parameters& conf)
+    : art::EDAnalyzer(conf),
+      _simsTag(conf().simsTag()),
+      rng_(std::random_device{}()) {
+  gErrorIgnoreLevel = kError;
+  SetErrorHandler(DefaultErrorHandler);
+}
+
+void RNTuplemaker::beginJob()
+{
+  art::ServiceHandle<art::TFileService> tfs;
+  
+  // Create an RNTuple model with fields
+  auto model = ROOT::Experimental::RNTupleModel::Create();
+  fldEventId_  = model->MakeField<int>("eventId");
+  fldHasElec_  = model->MakeField<int>("hasElec");
+  fldElecPdg_   = model->MakeField<int>("elec_pdg");
+  fldElecMom_   = model->MakeField<float>("elec_mom");
+  fldElecTime_  = model->MakeField<float>("elec_time");
+  
+  // Create the RNTuple writer using TFileService
+  writer_ = tfs->make_rntuple(std::move(model), "simParticles");
+
+  
+}
+
+
+void RNTuplemaker::analyze(const art::Event& e) {
+  auto simsHandle = e.getValidHandle<SimParticleCollection>(_simsTag);
+
+  *fldEventId_ = e.id().event();
+  // Fill with dummy random numbers for testing
+  std::uniform_int_distribution<int> intDist(0, 1);
+  std::uniform_real_distribution<float> floatDist(50.0f, 200.0f);
+  
+  *fldHasElec_  = intDist(rng_);
+  *fldElecPdg_   = *fldHasElec_ ? 11 : 0;
+  *fldElecMom_   = *fldHasElec_ ? floatDist(rng_) : 0.0f;
+  *fldElecTime_  = *fldHasElec_ ? floatDist(rng_) / 100.0f : 0.0f; 
+
+  // Write ONE row per event
+  writer_->Fill();
+}
+
+} // namespace mu2e
+
+DEFINE_ART_MODULE(mu2e::RNTuplemaker)
