@@ -491,11 +491,11 @@ void create_val_file_rooutil(std::string filename, std::string outfilename) {
   TH1F* h_caloclusters_hits_ = new TH1F("h_caloclusters_hits_", "", 100,0,100);
   TH1F* h_caloclusters_size_ = new TH1F("h_caloclusters_size_", "", 100,0,100);
   TH1F* h_caloclusters_isSplit_ = new TH1F("h_caloclusters_isSplit_", "", 2,0,2);
-  TH1F* h_caloclusters_secondMoment = new TH1F("h_caloclusters_secondMoment", "", 100,0,500);
-  TH1F* h_caloclusters_e1 = new TH1F("h_caloclusters_e1", "", 100,0,100);
-  TH1F* h_caloclusters_e2 = new TH1F("h_caloclusters_e2", "", 100,0,100);
-  TH1F* h_caloclusters_e9 = new TH1F("h_caloclusters_e9", "", 100,0,100);
-  TH1F* h_caloclusters_e25 = new TH1F("h_caloclusters_e25", "", 100,0,100);
+  TH1F* h_caloclusters_secondMoment_ = new TH1F("h_caloclusters_secondMoment_", "", 100,0,500);
+  TH1F* h_caloclusters_e1_ = new TH1F("h_caloclusters_e1_", "", 100,0,100);
+  TH1F* h_caloclusters_e2_ = new TH1F("h_caloclusters_e2_", "", 100,0,100);
+  TH1F* h_caloclusters_e9_ = new TH1F("h_caloclusters_e9_", "", 100,0,100);
+  TH1F* h_caloclusters_e25_ = new TH1F("h_caloclusters_e25_", "", 100,0,100);
 
   TH1F* h_calohits_crystalId_ = new TH1F("h_calohits_crystalId_", "", 2,0,2);
   TH1F* h_calohits_nSiPMs_ = new TH1F("h_calohits_nSiPMs_", "", 100,0,100);
@@ -1190,11 +1190,11 @@ void create_val_file_rooutil(std::string filename, std::string outfilename) {
         }
         h_caloclusters_size_->Fill(calocluster.size_);
         h_caloclusters_isSplit_->Fill(calocluster.isSplit_);
-        h_caloclusters_secondMoment->Fill(calocluster.secondMoment);
-        h_caloclusters_e1->Fill(calocluster.e1);
-        h_caloclusters_e2->Fill(calocluster.e2);
-        h_caloclusters_e9->Fill(calocluster.e9);
-        h_caloclusters_e25->Fill(calocluster.e25);
+        h_caloclusters_secondMoment_->Fill(calocluster.secondMoment_);
+        h_caloclusters_e1_->Fill(calocluster.e1_);
+        h_caloclusters_e2_->Fill(calocluster.e2_);
+        h_caloclusters_e9_->Fill(calocluster.e9_);
+        h_caloclusters_e25_->Fill(calocluster.e25_);
       }
     }
 

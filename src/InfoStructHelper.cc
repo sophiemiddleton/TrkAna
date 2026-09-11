@@ -567,14 +567,16 @@ namespace mu2e {
     clusterinfo.size_ = ccptr.size();
     clusterinfo.isSplit_ = ccptr.isSplit();
     
-    // Use ClusterUtils to compute energy moments
-    auto cal = GeomHandle<Calorimeter>();
-    ClusterUtils clusterUtils(*cal, ccptr);
-    clusterinfo.secondMoment = clusterUtils.secondMoment();
-    clusterinfo.e1 = clusterUtils.e1();
-    clusterinfo.e2 = clusterUtils.e2();
-    clusterinfo.e9 = clusterUtils.e9();
-    clusterinfo.e25 = clusterUtils.e25();
+    // Compute energy moments if cluster has hits
+    if (!ccptr.caloHitsPtrVector().empty()) {
+      auto cal = GeomHandle<Calorimeter>();
+      ClusterUtils clusterUtils(*cal, ccptr);
+      clusterinfo.secondMoment_ = clusterUtils.secondMoment();
+      clusterinfo.e1_ = clusterUtils.e1();
+      clusterinfo.e2_ = clusterUtils.e2();
+      clusterinfo.e9_ = clusterUtils.e9();
+      clusterinfo.e25_ = clusterUtils.e25();
+    }
     
     clusterinfos.push_back(clusterinfo);
   }
