@@ -38,14 +38,14 @@ physics.filters : {
     MustRegrow : "All"
   }
 
-  RegrowReflecte : {
+  SelectReflecte : {
     @table::TrkReco.filters.SelectReflections
     UpstreamKalSeedCollection : "RegrowKKe"
     DownstreamKalSeedCollection : "RegrowKKe"
     ReflectionTestDirection : "Both" # Require both direction to have a reflection match
   }
 
-  RegrowReflectmu : {
+  SelectReflectmu : {
     @table::TrkReco.filters.SelectReflections
     UpstreamKalSeedCollection : "RegrowKKmu"
     DownstreamKalSeedCollection : "RegrowKKmu"
@@ -63,42 +63,42 @@ physics.producers : {
 
   TrkQuale : {
     @table::TrkQual
-    KalSeedPtrCollection : "RegrowReflecte"
+    KalSeedPtrCollection : "SelectReflecte"
   }
 
   TrkQualmu : {
     @table::TrkQual
-    KalSeedPtrCollection : "RegrowReflectmu"
+    KalSeedPtrCollection : "SelectReflectmu"
   }
 
   TrkDtDte : {
     @table::TrkPIDProducers.TrkDtDt
-    kalSeeds : [ "RegrowReflecte" ]
+    kalSeeds : [ "SelectReflecte" ]
   }
 
   TrkDtDtmu : {
     @table::TrkPIDProducers.TrkDtDt
-    kalSeeds : [ "RegrowReflectmu" ]
+    kalSeeds : [ "SelectReflectmu" ]
   }
 
   TrkPIDe : {
     @table::TrkPIDProducers.TrkPID
-    KalSeeds : [ "RegrowReflecte" ]
-    KalSeedDtDts : [ "TrkDtDte:RegrowReflecte" ]
+    KalSeeds : [ "SelectReflecte" ]
+    KalSeedDtDts : [ "TrkDtDte:SelectReflecte" ]
 
   }
 
   TrkPIDmu : {
     @table::TrkPIDProducers.TrkPID
-    KalSeeds : [ "RegrowReflectmu" ]
-    KalSeedDtDts : [ "TrkDtDtmu:RegrowReflectmu" ]
+    KalSeeds : [ "SelectReflectmu" ]
+    KalSeedDtDts : [ "TrkDtDtmu:SelectReflectmu" ]
   }
 
   PBIWeight : @local::PBIWeight
 }
 
-physics.RePath : [ RegrowSH, PBIWeight, RegrowKKe, RegrowReflecte, TrkQuale, TrkDtDte, TrkPIDe ]
-physics.RmuPath : [ RegrowSH, PBIWeight, RegrowKKmu, RegrowReflectmu, TrkQualmu, TrkDtDtmu, TrkPIDmu ]
+physics.RePath : [ RegrowSH, PBIWeight, RegrowKKe, SelectReflecte, TrkQuale, TrkDtDte, TrkPIDe ]
+physics.RmuPath : [ RegrowSH, PBIWeight, RegrowKKmu, SelectReflectmu, TrkQualmu, TrkDtDtmu, TrkPIDmu ]
 
 physics.trigger_paths : [ RePath, RmuPath ]
 
@@ -116,9 +116,9 @@ physics.analyzers : {
       }
       fits : [
         { @table::All
-          input : "RegrowReflecte"
-          trkPIDTags : ["TrkPIDe:RegrowReflecte"]
-          trkDtDtTag : "TrkDtDte:RegrowReflecte"
+          input : "SelectReflecte"
+          trkPIDTags : ["TrkPIDe:SelectReflecte"]
+          trkDtDtTag : "TrkDtDte:SelectReflecte"
           trkQualLeaves : [ { leafname : "" inputTag : "TrkQuale:ANN" modelVersion : "ANN1_v2.0" } ]
         }
       ]
@@ -138,9 +138,9 @@ physics.analyzers : {
       }
       fits : [
         { @table::All
-          input : "RegrowReflectmu"
-          trkPIDTags : ["TrkPIDmu:RegrowReflectmu"]
-          trkDtDtTag : "TrkDtDtmu:RegrowReflectmu"
+          input : "SelectReflectmu"
+          trkPIDTags : ["TrkPIDmu:SelectReflectmu"]
+          trkDtDtTag : "TrkDtDtmu:SelectReflectmu"
           trkQualLeaves : [ { leafname : "" inputTag : "TrkQualmu:ANN" modelVersion : "ANN1_v2.0" } ]
         }
       ]
