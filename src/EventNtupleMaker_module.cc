@@ -1066,12 +1066,12 @@ namespace mu2e {
     if(fillEventMC()){
       _infoMCStructHelper.updateEvent(event);
     }
-    // fill event level info
-    fillEventInfo(event);
-
-    // create event weight branch
+    // create event weight branch, and get this event's weight handles: fillEventInfo reads them
     std::vector<art::Handle<EventWeight> > eventWeightHandles;
     _wtHandles = createSpecialBranch(event, "evtwt", eventWeightHandles, _wtinfo, _wtinfo._weights, false);
+
+    // fill event level info
+    fillEventInfo(event);
 
     std::string process = _conf.trigProcessName();
     _allKSPCHs.clear();
