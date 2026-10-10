@@ -493,7 +493,7 @@ namespace mu2e {
     }
   }
 
-  void InfoMCStructHelper::fillCaloSimInfos(CaloClusterMC const& ccmc, std::vector<SimInfo>& csis) {
+  void InfoMCStructHelper::fillCaloSimInfos(CaloClusterMC const& ccmc, std::vector<SimInfo>& csis, PrimaryParticle const* primary) {
     auto const& edeps = ccmc.energyDeposits();
     for (auto const& edep : edeps){
       int simid = edep.sim()->id().asInt();
@@ -511,6 +511,14 @@ namespace mu2e {
         SimInfo siminfo;
         fillSimInfo(edep.sim(), siminfo);
         siminfo.index = csis.size();
+        if(primary != nullptr) { // closest relationship to any of the primary particles
+          MCRelationship bestrel;
+          for(auto const& spp : primary->primarySimParticles()){
+            MCRelationship mcrel(edep.sim(), spp);
+            if(mcrel > bestrel) bestrel = mcrel;
+          }
+          siminfo.prirel = bestrel;
+        }
         csis.push_back(siminfo);
       }
     }
