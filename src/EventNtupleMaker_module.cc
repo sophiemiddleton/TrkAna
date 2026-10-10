@@ -1379,7 +1379,7 @@ namespace mu2e {
     }
     if(fillCaloSimMC()){
       for(const auto& clustermc : *_ccmcch.product()){
-        _infoMCStructHelper.fillCaloSimInfos(clustermc,_caloSIMCs);
+        _infoMCStructHelper.fillCaloSimInfos(clustermc,_caloSIMCs,(_pph.isValid()) ? _pph.product() : nullptr);
       }
     }
     if(fillCaloDigiSimMC()){

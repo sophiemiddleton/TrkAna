@@ -76,7 +76,8 @@ namespace mu2e {
       void fillCaloHitInfoMC(CaloHitMC const& chmc, std::vector<CaloHitInfoMC>& chimc, int clusterIdx = -1, const CaloHitEntrant* entrant = nullptr);
       void fillCaloDigiMCInfo(CaloShowerSim const& shower, std::vector<CaloDigiMCInfo>& calodigimc);
       void fillCaloDigiSimInfos(CaloShowerSim const& shower, std::vector<SimInfo>& cdsis);
-      void fillCaloSimInfos(CaloClusterMC const& ccmc, std::vector<SimInfo>& csis);
+      // primary: if given, each SimInfo's prirel is its relationship to the event primary particles, as for track sims
+      void fillCaloSimInfos(CaloClusterMC const& ccmc, std::vector<SimInfo>& csis, PrimaryParticle const* primary = nullptr);
       void fillExtraMCStepInfos(KalSeedMC const& kseedmc, StepPointMCCollection const& mcsteps,
                                 std::vector<MCStepInfos>& mcsics, std::vector<MCStepSummaryInfo>& mcssis);
       void fillSurfaceStepInfos(KalSeedMC const& kseedmc, SurfaceStepCollection const& surfsteps,std::vector<SurfaceStepInfo>& ssic);
