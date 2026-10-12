@@ -11,6 +11,7 @@ These branches contain one element per event.
 | hitcount |  Single objects branch |   counts of different hit types in an event| [see HitCount.hh](../inc/HitCount.hh)
 | tcnt |  Single objects branch |   counts track types and track-related quantities in an event (MARKED FOR REMOVAL)| [see TrkCount.hh](../inc/TrkCount.hh)
 | lumistream |  Single objects branch |   basic information available in the lumi stream| [see LumiStreamInfo.hh](../inc/LumiStreamInfo.hh)
+| msdhits |  Vector branch |   mobile synchronization detector (MSD) hit information| [see MSDHitInfo.hh](../inc/MSDHitInfo.hh)
 | primary |  Vector branch |   information about SimParticles in genealogy| [see SimInfo.hh](../inc/SimInfo.hh)
 ## Track Branches
 

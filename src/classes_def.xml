@@ -66,6 +66,8 @@
   <class name="std::vector<mu2e::CaloHitInfo>" />
   <class name="mu2e::CaloRecoDigiInfo" />
   <class name="std::vector<mu2e::CaloRecoDigiInfo>" />
+  <class name="mu2e::MSDHitInfo" />
+  <class name="std::vector<mu2e::MSDHitInfo>" />
   <class name="mu2e::CaloDigiInfo" />
   <class name="std::vector<mu2e::CaloDigiInfo>" />
     <class name="mu2e::CaloDigiMCInfo" />

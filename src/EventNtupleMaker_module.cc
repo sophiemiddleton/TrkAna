@@ -40,6 +40,8 @@
 #include "Offline/GeometryService/inc/DetectorSystem.hh"
 #include "Offline/CosmicRayShieldGeom/inc/CosmicRayShield.hh"
 #include "Offline/DataProducts/inc/SurfaceId.hh"
+#include "Offline/RecoDataProducts/inc/MSDHit.hh"
+#include "artdaq-core-mu2e/Data/EventHeader.hh"
 // Framework includes.
 #include "art/Framework/Core/EDAnalyzer.h"
 #include "art/Framework/Principal/Event.h"
@@ -83,6 +85,7 @@
 #include "EventNtuple/inc/HelixInfo.hh"
 #include "EventNtuple/inc/TimeClusterInfo.hh"
 #include "EventNtuple/inc/LumiStreamInfo.hh"
+#include "EventNtuple/inc/MSDHitInfo.hh"
 #include "EventNtuple/inc/LineSeedInfo.hh"
 #include "EventNtuple/inc/InfoStructHelper.hh"
 #include "EventNtuple/inc/CrvInfoHelper.hh"
@@ -226,6 +229,14 @@ namespace mu2e {
         fhicl::Atom<art::InputTag> trk  {Name("trk"),  Comment("Tag the tracker intensity info")};
       };
 
+      // ── Mobile synchronization detector (MSD) config ─────────────────────
+      struct MSDConfig {
+        using Name=fhicl::Name;
+        using Comment=fhicl::Comment;
+        fhicl::Atom<bool>          fill   {Name("fill"),    Comment("Fill MSD hit branch; an empty branch is written if the collection is missing"), false};
+        fhicl::Atom<art::InputTag> hitsTag{Name("hitsTag"), Comment("Tag for MSDHit collection"), art::InputTag("MSDHitMaker")};
+      };
+
       // ── MC step collections config (independent of per-branch track config) ─
       struct MCStepsConfig {
         using Name=fhicl::Name;
@@ -352,6 +363,7 @@ namespace mu2e {
         fhicl::Atom<art::InputTag> PBITag{Name("PBITag"), Comment("Tag for ProtonBunchIntensity object")};
         fhicl::Atom<art::InputTag> PBTTag{Name("PBTTag"), Comment("Tag for ProtonBunchTime object")};
         fhicl::Atom<art::InputTag> EWMTag{Name("EWMTag"), Comment("Tag for EventWindowMarker object")};
+        fhicl::Atom<art::InputTag> EventHeaderTag{Name("EventHeaderTag"), Comment("Tag for EventHeader object, used for the event window tag; empty to disable"), art::InputTag("ProcessCFOData")};
         // Trigger
         fhicl::Atom<bool> filltrig{Name("FillTriggerInfo")};
         fhicl::Atom<std::string> trigProcessName{Name("TriggerProcessName"), Comment("Process name for Trigger")};
@@ -367,6 +379,7 @@ namespace mu2e {
         fhicl::Table<TimeClusterConfig> timeclusters{Name("timeclusters"),Comment("Time cluster branches config")};
         fhicl::Table<LineSeedConfig>    lineseeds   {Name("lineseeds")   ,Comment("Line seed branches config")};
         fhicl::Table<LumiStreamConfig>  lumistream  {Name("lumistream")  ,Comment("Lumi stream branch config")};
+        fhicl::Table<MSDConfig>         msd         {Name("msd")         ,Comment("Mobile synchronization detector branch config")};
         fhicl::Table<MCStepsConfig>     mcsteps     {Name("mcsteps"),     Comment("MC step collection branches config")};
         fhicl::Table<SubRunConfig>      subruns     {Name("subruns"),     Comment("SubRun ntuple/histogram config")};
       };
@@ -396,7 +409,7 @@ namespace mu2e {
       // general event info branch
       EventInfo _einfo;
       EventInfoMC _einfomc;
-      art::InputTag _recoCountTag, _PBITag, _PBTTag, _EWMTag;
+      art::InputTag _recoCountTag, _PBITag, _PBTTag, _EWMTag, _evtHeaderTag;
       art::Handle<mu2e::EventWindowMarker> _ewmh;
       // track control
       bool _hastrks;
@@ -473,6 +486,8 @@ namespace mu2e {
       art::Handle<IntensityInfoTimeCluster> _iiTCHandle;
       art::Handle<IntensityInfoTrackerHits> _iiTrkHandle;
       LumiStreamInfo _lumiStreamI;
+      // MSD hit branch
+      std::vector<MSDHitInfo> _msdHIs;
       // event weights
       std::vector<art::Handle<EventWeight> > _wtHandles;
       EventWeightInfo _wtinfo;
@@ -596,6 +611,7 @@ namespace mu2e {
     _PBITag(conf().PBITag()),
     _PBTTag(conf().PBTTag()),
     _EWMTag(conf().EWMTag()),
+    _evtHeaderTag(conf().EventHeaderTag()),
     _hastrks(conf().hastrks()),
     _hascrv(conf().hascrv()),
     _infoMCStructHelper(conf().mc().infoMCStructHelper()),
@@ -855,6 +871,11 @@ namespace mu2e {
     // Lumi stream
     if(_conf.lumistream().fill()) {
       _ntuple->Branch("lumistream.",&_lumiStreamI,_buffsize,_splitlevel);
+    }
+
+    // MSD hits
+    if(_conf.msd().fill()) {
+      _ntuple->Branch("msdhits.",&_msdHIs,_buffsize,_splitlevel);
     }
 
     // ── Calorimeter reco branches ──────────────────────────────────────────
@@ -1306,6 +1327,15 @@ namespace mu2e {
       if(_iiTrkHandle.isValid()) _infoStructHelper.fillLumiStreamInfo(*_iiTrkHandle, _lumiStreamI);
     }
 
+    // MSD hits
+    if(_conf.msd().fill()) {
+      _msdHIs.clear();
+      art::Handle<MSDHitCollection> msdHitsHandle;
+      if(event.getByLabel(_conf.msd().hitsTag(), msdHitsHandle)) {
+        for(const auto& hit : *msdHitsHandle) _infoStructHelper.fillMSDHitInfo(hit, _msdHIs);
+      }
+    }
+
     // ── Calorimeter ────────────────────────────────────────────────────────
     if(fillCaloClsMC())    { _caloCIMCs.clear(); }
     if(fillCaloHitsMC())   { _caloHIMCs.clear(); }
@@ -1593,6 +1623,11 @@ namespace mu2e {
 
     if(_EWMTag != "") {
       event.getByLabel(_EWMTag, _ewmh);
+    }
+
+    if(_evtHeaderTag != "") {
+      art::Handle<mu2e::EventHeader> evtHeaderHandle;
+      if(event.getByLabel(_evtHeaderTag, evtHeaderHandle)) _einfo.ewt = evtHeaderHandle->ewt;
     }
 
     if(fillEventMC()) {
