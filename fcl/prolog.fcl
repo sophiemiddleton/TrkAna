@@ -370,7 +370,7 @@ EventNtupleMaker : {
   }
   # -- Mobile synchronization detector -------------------------------------
   msd : {
-    fill    : true
+    fill    : false # set true to fill msdhits.
     hitsTag : "MSDHitMaker" # an empty branch is written if not found
   }
   # -- MC step collections ---------------------------------------------------
