@@ -52,6 +52,7 @@ helper.make_plugins( [
     'art_root_io_TFileService',
     'art_root_io_tfile_support',
     'boost_filesystem',
+    'artdaq-core-mu2e_Data',
     'mu2e_CaloCluster',
     'mu2e_DataProducts',
     'mu2e_MCDataProducts',

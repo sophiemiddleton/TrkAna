@@ -47,6 +47,8 @@
 #include "EventNtuple/inc/CaloRecoDigiInfo.hh"
 #include "EventNtuple/inc/CaloDigiInfo.hh"
 #include "EventNtuple/inc/LumiStreamInfo.hh"
+#include "EventNtuple/inc/MSDHitInfo.hh"
+#include "Offline/RecoDataProducts/inc/MSDHit.hh"
 #include "art/Framework/Principal/Handle.h"
 #include <vector>
 #include <functional>
@@ -98,6 +100,7 @@ namespace mu2e {
     void fillCaloHitInfo(const CaloHit& chptr, std::vector<CaloHitInfo>& hitinfos, int clusterIdx = -1);
     void fillCaloRecoDigiInfo(const CaloRecoDigi& crdptr, std::vector<CaloRecoDigiInfo>& recodigiinfos, int hitIdx = -1);
     void fillCaloDigiInfo(const CaloDigi& cdptr, std::vector<CaloDigiInfo>& digiinfos, int recodigiIdx = -1);
+    void fillMSDHitInfo(const MSDHit& hit, std::vector<MSDHitInfo>& msdhitinfos);
   };
 }
 

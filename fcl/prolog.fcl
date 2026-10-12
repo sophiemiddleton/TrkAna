@@ -262,6 +262,7 @@ EventNtupleMaker : {
   PBITag : "PBISim"
   PBTTag : "EWMProducer"
   EWMTag : "EWMProducer"
+  EventHeaderTag : "ProcessCFOData" # EventHeader for the event window tag; empty to disable
   FillTriggerInfo : true
   TriggerProcessName : "Digitize"
   TriggerPathSuffix : "DigitizePath"
@@ -366,6 +367,11 @@ EventNtupleMaker : {
     calo : "CaloHitMakerFast"
     tc   : "TrigFlagPH"
     trk  : "TrigMakeSH"
+  }
+  # -- Mobile synchronization detector -------------------------------------
+  msd : {
+    fill    : true
+    hitsTag : "MSDHitMaker" # an empty branch is written if not found
   }
   # -- MC step collections ---------------------------------------------------
   mcsteps : {

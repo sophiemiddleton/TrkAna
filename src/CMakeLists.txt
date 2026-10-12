@@ -47,6 +47,7 @@ cet_build_plugin(EventNtupleMaker art::module
     REG_SOURCE EventNtupleMaker_module.cc
     LIBRARIES REG
       event-ntuple::eventntuple
+      artdaq-core-mu2e::Data
       Offline::MCDataProducts
       Offline::RecoDataProducts
       Offline::DataProducts

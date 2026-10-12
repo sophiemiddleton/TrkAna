@@ -709,4 +709,11 @@ namespace mu2e {
 
 
 
+  void InfoStructHelper::fillMSDHitInfo(const MSDHit& hit, std::vector<MSDHitInfo>& msdhitinfos) {
+    MSDHitInfo msdhitinfo;
+    msdhitinfo.channel = hit.channelID();
+    msdhitinfo.time = hit.time();
+    msdhitinfo.tot = hit.tot();
+    msdhitinfos.push_back(msdhitinfo);
+  }
 }
