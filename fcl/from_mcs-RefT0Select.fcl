@@ -1,66 +1,18 @@
 #
 # Script to regrow, make final selection, and tuple reflecting cosmic ray particles starting with the coarse output from Production/JobConfig/reco/RefSelect.fcl
 # original author: D. Brown, 6/25/26
+#include "Offline/fcl/minimalMessageService.fcl"
+#include "Offline/fcl/standardProducers.fcl"
+#include "Offline/fcl/standardServices.fcl"
+#include "EventNtuple/fcl/prolog.fcl"
 #
-#include "Offline/TrkReco/fcl/prolog.fcl"
-#include "Offline/TrkHitReco/fcl/prolog.fcl"
-#include "Offline/Mu2eKinKal/fcl/prolog.fcl"
-#include "EventNtuple/fcl/from_mcs-mockdata.fcl"
+#include "Production/JobConfig/recoMC/RefExtrapSelect.fcl"
 services : @local::Services.Reco
-process_name: ENRefSelect
+process_name: ENRefT0Select
 source : { module_type : RootInput }
 
-physics.filters : {
-
-  RegrowKKe : {
-    @table::Mu2eKinKal.RegrowLH
-    ExtrapolationSettings :{
-      @table::Mu2eKinKal.LHDRIFTXTRAP
-      BackToTracker : true
-    }
-    KalSeedMCAssns : "SelectReco"
-    CopyKalSeedMCs : true
-    KalSeedPtrCollection : Reflecte
-    ComboHitCollection : RegrowSH
-    MustRegrow : "All"
-  }
-
-  RegrowKKmu : {
-    @table::Mu2eKinKal.RegrowLH
-    ExtrapolationSettings :{
-      @table::Mu2eKinKal.LHDRIFTXTRAP
-      BackToTracker : true
-    }
-    KalSeedMCAssns : "SelectReco"
-    CopyKalSeedMCs : true
-    KalSeedPtrCollection : Reflectmu
-    ComboHitCollection : RegrowSH
-    MustRegrow : "All"
-  }
-
-  SelectReflecte : {
-    @table::TrkReco.filters.SelectReflections
-    UpstreamKalSeedCollection : "RegrowKKe"
-    DownstreamKalSeedCollection : "RegrowKKe"
-    ReflectionTestDirection : "Both" # Require both direction to have a reflection match
-  }
-
-  SelectReflectmu : {
-    @table::TrkReco.filters.SelectReflections
-    UpstreamKalSeedCollection : "RegrowKKmu"
-    DownstreamKalSeedCollection : "RegrowKKmu"
-    ReflectionTestDirection : "Both" # Require both direction to have a reflection match
-  }
-
-}
-
 physics.producers : {
-  RegrowSH : {
-    @table::TrkHitReco.makeSH
-    StrawDigiCollectionTag  : "SelectReco"
-    StrawDigiADCWaveformCollectionTag : "SelectReco"
-  }
-
+  @table::physics.producers
   TrkQuale : {
     @table::TrkQual
     KalSeedPtrCollection : "SelectReflecte"
@@ -101,6 +53,10 @@ physics.RePath : [ RegrowSH, PBIWeight, RegrowKKe, SelectReflecte, TrkQuale, Trk
 physics.RmuPath : [ RegrowSH, PBIWeight, RegrowKKmu, SelectReflectmu, TrkQualmu, TrkDtDtmu, TrkPIDmu ]
 
 physics.trigger_paths : [ RePath, RmuPath ]
+
+physics.analyzers : {
+  @table::EventNtuple.analyzers
+}
 
 physics.analyzers : {
   ENRefe : {
@@ -147,6 +103,9 @@ physics.analyzers : {
     }
   }
 }
+
+physics.analyzers.ENRefe.subruns.cosmicLivetime.inputTag : "CosmicResampler:mixed"
+physics.analyzers.ENRefmu.subruns.cosmicLivetime.inputTag : "CosmicResampler:mixed"
 
 physics.Refe : [ ENRefe ]
 physics.Refmu : [ ENRefmu ]
