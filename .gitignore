@@ -8,3 +8,8 @@
 *__pycache__
 backing
 *dict*
+# spack
+spack-*
+*pyc
+build-*
+EventNtuple

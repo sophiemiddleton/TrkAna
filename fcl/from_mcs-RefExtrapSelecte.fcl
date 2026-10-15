@@ -1,0 +1,64 @@
+#
+# Script to tuple reflecting cosmic ray particle candidates selected based on final extrapolation comparisons
+# original author: D. Brown, 6/25/26
+#
+#include "Offline/TrkReco/fcl/prolog.fcl"
+#include "Offline/TrkHitReco/fcl/prolog.fcl"
+#include "Offline/Mu2eKinKal/fcl/prolog.fcl"
+#include "EventNtuple/fcl/from_mcs-mockdata.fcl"
+services : @local::Services.Reco
+process_name: ENRefExtrapSelect
+source : { module_type : RootInput }
+
+physics.producers : {
+  TrkQuale : {
+    @table::TrkQual
+    KalSeedPtrCollection : "SelectReflecte"
+  }
+
+  TrkDtDte : {
+    @table::TrkPIDProducers.TrkDtDt
+    kalSeeds : [ "SelectReflecte" ]
+  }
+
+  TrkPIDe : {
+    @table::TrkPIDProducers.TrkPID
+    KalSeeds : [ "SelectReflecte" ]
+    KalSeedDtDts : [ "TrkDtDte:SelectReflecte" ]
+
+  }
+
+  PBIWeight : @local::PBIWeight
+}
+
+physics.RePath : [ PBIWeight, TrkQuale, TrkDtDte, TrkPIDe ]
+
+physics.trigger_paths : [ RePath ]
+
+physics.analyzers : {
+  ENRefe : {
+    @table::physics.analyzers.EventNtuple
+    SelectEvents: [ RePath ]
+    trk : {
+      @table::EventNtupleMaker.trk
+      fillTrkDtDt: true
+      fillTrkPID: true
+      mc : {
+        fill : true
+        kalSeedMCAssns: "RegrowKKe"
+      }
+      fits : [
+        { @table::All
+          input : "SelectReflecte"
+          trkPIDTags : ["TrkPIDe:SelectReflecte"]
+          trkDtDtTag : "TrkDtDte:SelectReflecte"
+          trkQualLeaves : [ { leafname : "" inputTag : "TrkQuale:ANN" modelVersion : "ANN1_v2.0" } ]
+        }
+      ]
+    }
+  }
+}
+
+physics.Refe : [ ENRefe ]
+
+physics.end_paths : [ Refe ]
