@@ -622,7 +622,7 @@ namespace mu2e {
   }
 
   void InfoStructHelper::fillLumiStreamInfo(IntensityInfoTimeCluster const& info, LumiStreamInfo& lumi) {
-    lumi.nProtonTCs = info.nProtonTCs();
+    lumi.nProtonTCs = info.nTCs();
   }
 
   void InfoStructHelper::fillLumiStreamInfo(IntensityInfoTrackerHits const& info, LumiStreamInfo& lumi) {
