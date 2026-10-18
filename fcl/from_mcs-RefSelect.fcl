@@ -1,5 +1,5 @@
 #
-# Script to regrow, make final selection, and tuple reflecting cosmic ray particles starting with the coarse output from Production/JobConfig/reco/RefSelect.fcl
+# Script to regrow, make final selection, and tuple reflecting cosmic ray particles starting with the coarse output from Production/JobConfig/reco/RefT0Select.fcl
 # original author: D. Brown, 6/25/26
 #include "Offline/fcl/minimalMessageService.fcl"
 #include "Offline/fcl/standardProducers.fcl"
@@ -8,7 +8,7 @@
 #
 #include "Production/JobConfig/recoMC/RefExtrapSelect.fcl"
 services : @local::Services.Reco
-process_name: ENRefT0Select
+process_name: ENRefSelect
 source : { module_type : RootInput }
 
 physics.producers : {
@@ -49,8 +49,8 @@ physics.producers : {
   PBIWeight : @local::PBIWeight
 }
 
-physics.RePath : [ RegrowSH, PBIWeight, RegrowKKe, SelectReflecte, TrkQuale, TrkDtDte, TrkPIDe ]
-physics.RmuPath : [ RegrowSH, PBIWeight, RegrowKKmu, SelectReflectmu, TrkQualmu, TrkDtDtmu, TrkPIDmu ]
+physics.RePath : [ @sequence::physics.RePath, PBIWeight, TrkQuale, TrkDtDte, TrkPIDe ]
+physics.RmuPath : [ @sequence::physics.RmuPath, PBIWeight, TrkQualmu, TrkDtDtmu, TrkPIDmu ]
 
 physics.trigger_paths : [ RePath, RmuPath ]
 
