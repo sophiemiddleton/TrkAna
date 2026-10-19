@@ -1,5 +1,5 @@
 //
-// HelixInfo: struct for HelixSeed info
+// HelixInfo: Information in a reconstructed helix seed; one branch per configured collection (`helices.names`), e.g. Offline and Online results
 //
 #ifndef EventNtuple_HelixInfo_hh
 #define EventNtuple_HelixInfo_hh

@@ -3,8 +3,8 @@ import os
 class nthelper:
 
     single_object_branches = ['evtinfo', 'evtinfomc', 'hitcount', 'tcnt', 'crvsummary', 'crvsummarymc', 'lumistream']
-    vector_object_branches = ['trk', 'trkmc', 'trkdtdt', 'trkcalohit', 'trkcalohitmc', 'timeclusters', 'lineseeds', 'caloclustersmc', 'calohitsmc', 'calodigismc', 'calomcsim', 'calodigisim', 'caloclusters', 'calohits', 'calorecodigis', 'calodigis', 'crvcoincs', 'crvcoincsmc', 'crvcoincsmcplane', 'crvpulses', 'crvdigis', 'crvpulsesmc', 'msdhits', 'trkqual', 'trkpid', 'mcsteps', 'primary']
-    vector_vector_object_branches = ['trksegs', 'trksegpars_lh', 'trksegpars_ch', 'trksegpars_kl', 'trkmcsim', 'trkhits', 'trkhitsmc', 'trkmats', 'trkhitcalibs', 'trkmcsci', 'trkmcssi', 'trksegsmc', 'timeclustershits', 'lineseedshits' ]
+    vector_object_branches = ['trk', 'trkmc', 'trkdtdt', 'trkcalohit', 'trkcalohitmc', 'timeclusters', 'lineseeds', 'caloclustersmc', 'calohitsmc', 'calodigismc', 'calomcsim', 'calodigisim', 'caloclusters', 'calohits', 'calorecodigis', 'calodigis', 'crvcoincs', 'crvcoincsmc', 'crvcoincsmcplane', 'crvpulses', 'crvdigis', 'crvpulsesmc', 'msdhits', 'helices', 'trkqual', 'trkpid', 'mcsteps', 'primary']
+    vector_vector_object_branches = ['trksegs', 'trksegpars_lh', 'trksegpars_ch', 'trksegpars_kl', 'trkmcsim', 'trkhits', 'trkhitsmc', 'trkmats', 'trkhitcalibs', 'trkmcsci', 'trkmcssi', 'trksegsmc', 'timeclustershits', 'lineseedshits', 'heliceshits' ]
 
     evt_branches = ['evtinfo','evtinfomc','hitcount','tcnt', 'lumistream', 'msdhits', 'primary']
     trk_branches = ['trk', 'trkmc', 'trkcalohit', 'trkcalohitmc', 'trkdtdt', 'trkqual', 'trkpid']
@@ -12,7 +12,9 @@ class nthelper:
     straw_branches = ['trkhits', 'trkmats', 'trkhitsmc', 'trkhitcalibs']
     trk_mc_branches = [ 'trkmcsim' ]
     general_mc_branches = [ 'mcsteps' ]
-    basic_branches = [ 'timeclusters', 'lineseeds', 'timeclustershits', 'lineseedshits' ]
+    basic_branches = [ 'timeclusters', 'lineseeds', 'helices', 'timeclustershits', 'lineseedshits', 'heliceshits' ]
+    # Helix seed branches are named per collection (helices.names); these are the names used in the standard fcls
+    helix_branch_names = ['helicesde', 'helicesue', 'trigaprhelices', 'trigcalhelicesde']
     calo_branches = ['caloclusters', 'calohits', 'calorecodigis', 'calodigis']
     calo_mc_branches = ['caloclustersmc', 'calohitsmc', 'calodigismc', 'calomcsim', 'calodigisim']
     crv_branches = ['crvsummary','crvsummarymc','crvcoincs','crvcoincsmc','crvcoincsmcplane','crvpulses','crvdigis','crvpulsesmc']
@@ -56,6 +58,7 @@ class nthelper:
                            'lineseeds' : "LineSeedInfo",
                            'timeclustershits' : "ComboHitInfo",
                            'lineseedshits' : "ComboHitInfo",
+                           'heliceshits' : "ComboHitInfo",
                            'caloclustersmc': "CaloClusterInfoMC",
                            'calohitmc' : "CaloHitInfoMC",
                            'calohitsmc' : "CaloHitInfoMC",
@@ -82,8 +85,17 @@ class nthelper:
                            "crvpulsesmc" : "CrvPulseInfoReco"
                           }
 
+    # Map a configured helix seed branch name (and its <name>hits branch) onto the default helices branches
+    def resolve_branch(self, branch):
+        if branch in self.helix_branch_names:
+            return 'helices'
+        if branch.endswith('hits') and branch[:-len('hits')] in self.helix_branch_names:
+            return 'heliceshits'
+        return branch
+
     #
     def get_branch_explanation(self, branch):
+        branch = self.resolve_branch(branch)
         explanation=""
         if branch in self.track_types_dict.keys():
             explanation = "This is an outdated (v5) branch."
@@ -368,7 +380,7 @@ class nthelper:
             leaf_output = "";
             leaf_explanations = {};
             try:
-                struct = self.branch_struct_dict[i_branch]
+                struct = self.branch_struct_dict[self.resolve_branch(i_branch)]
                 struct_file = struct;
                 if (".hh" not in struct_file):
                     struct_file += ".hh"

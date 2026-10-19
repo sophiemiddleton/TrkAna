@@ -1,5 +1,5 @@
 //
-// ComboHitInfo: Basic information about a combo hit associated with a time cluster or a line seed
+// ComboHitInfo: Basic information about a combo hit associated with a time cluster, line seed, or helix seed
 //
 #ifndef EventNtuple_ComboHitInfo_HH
 #define EventNtuple_ComboHitInfo_HH
