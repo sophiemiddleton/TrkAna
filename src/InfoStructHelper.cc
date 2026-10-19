@@ -501,10 +501,6 @@ namespace mu2e {
     all_hinfos.emplace_back(hinfo);
   }
 
-  void InfoStructHelper::fillHelixInfo(art::Ptr<HelixSeed> const& hptr, std::vector<HelixInfo>& all_hinfos) {
-    if(hptr.isNonnull()) fillHelixInfo(*hptr, all_hinfos);
-  }
-
   void InfoStructHelper::fillHelixHitInfo(HelixSeed const& hseed, std::vector<std::vector<EventNtupleComboHitInfo>>& all_infos) {
     std::vector<EventNtupleComboHitInfo> infos;
     infos.reserve(hseed.hits().size());

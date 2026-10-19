@@ -85,7 +85,6 @@ namespace mu2e {
     void fillMatInfo(const KalSeed& kseed, std::vector<std::vector<TrkStrawMatInfo>>& tminfos );
     void fillTrkCaloHitInfo(const KalSeed& kseed, std::vector<TrkCaloHitInfo>& tchinfo );
     void fillHelixInfo(HelixSeed const& hseed, std::vector<HelixInfo>& all_hinfos);
-    void fillHelixInfo(art::Ptr<HelixSeed> const& hptr, std::vector<HelixInfo>& all_hinfos);
     void fillHelixHitInfo(HelixSeed const& hseed, std::vector<std::vector<EventNtupleComboHitInfo>>& all_infos);
     // chcol is the combo hit collection the time cluster indexes; if null the hit-derived leaves are left undefined
     void fillTimeClusterInfo(TimeCluster const& tc, std::vector<EventNtupleTimeClusterInfo>& infos, ComboHitCollection const* chcol = nullptr);

@@ -17,7 +17,7 @@ namespace mu2e {
     float lambda = -1; // helix dz/dphi (mm/radian)
     float rcent = -1; // radius of the helix center in the XY plane (mm)
     float fcent = -1; // azimuth of the helix center in the XY plane
-    float fz0 = -1; // azimuth at z = 0
+    float fz0 = -1; // azimuth (phi) at the center z position (radians)
     float chi2xy = -1; // squared sum of the hit residuals wrt the XY plane normalized by the degree of freedom
     float chi2fz = -1; // squared sum of the hit residuals wrt the ZPhi plane normalized by the degree of freedom
     float ecalo = -1; // energy deposited in calo cluster, -1 if none

@@ -152,6 +152,8 @@ class nthelper:
             print("- downstream positive muon\n")
             print("\nIn case the track is reflected (it has an upstream leg and a downstream leg), then each event contains 8 elements, the last 4 being upstream equivalent of the 4 listed above.\n")
             print("If a Kalman fit fails or there are multiple downstream tracks to fit, the number of element may vary.\n")
+            print("The field-on ```from_mcs-*``` fcls also store the online (trigger) tracks in the ```trigapr```, ```trigaprue```, and ```trigcalde``` branches, with the same structure as ```trk```.")
+            print("The trigger fits carry no surface intersections, so only the ```<name>``` and ```<name>calohit``` branches are filled: ```<name>segs``` and ```<name>segpars_*``` are always empty, and there is no MC truth, quality, PID, or DtDt information.\n")
             print("| branch | structure | explanation | leaf information |")
             print("|--------|-----------|-------------|------------------|")
         for branch in self.trk_branches:
