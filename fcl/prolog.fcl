@@ -337,7 +337,8 @@ EventNtupleMaker : {
     fill : true
     fillHits : true
     fillHitCalibs : false
-    fillTrkPID : false
+    # TrkPID needs TrkDtDt: to run without either, set both false and drop TrkPIDPath from the path
+    fillTrkPID : true
     fillTrkDtDt : true
     fits : [ @local::All ]
     mc : {

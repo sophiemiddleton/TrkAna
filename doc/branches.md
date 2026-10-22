@@ -43,6 +43,9 @@ The trigger fits carry no surface intersections, so only the ```<name>``` and ``
 | trkdtdt |  Vector branch |   Result of track dt_hit / dt_trk fit| [see TrkDtDtInfo.hh](../inc/TrkDtDtInfo.hh)
 | trkqual |  Vector branch |   the output of a multi-variate analysis (MVA)| [see MVAResultInfo.hh](../inc/MVAResultInfo.hh)
 | trkpid |  Vector branch |   the output of a multi-variate analysis (MVA)| [see MVAResultInfo.hh](../inc/MVAResultInfo.hh)
+
+```trkdtdt``` and ```trkpid``` are controlled by ```trk.fillTrkDtDt``` and ```trk.fillTrkPID```. The TrkPID MVA uses the dt_hit / dt_trk fit as an input, so the ```TrkPID``` producer needs ```TrkDtDt``` even when ```trkdtdt``` is not stored. To run without either, set both flags to false and remove ```TrkPIDPath``` (```TrkDtDt```, ```TrkPID```) from the path.
+
 ## Track segments Branches
 
 These branches contain 4 elements per event corresponding to different Kalman fit hypotheses (see Track branches).

@@ -583,6 +583,10 @@ namespace mu2e {
         return _conf.trk().fillTrkDtDt() && !_allTrkFitBranches.at(i_trk_fit_branch).trkDtDtTag().empty();
       }
 
+      // TrkPID: the global flag gates the trkPIDTags of every fit. The TrackPID producer itself needs the
+      // KalSeedDtDt collection, so turning this off (and dropping TrkPIDPath) removes the TrkDtDt dependency
+      bool fillTrkPID() const { return _conf.trk().fillTrkPID(); }
+
       // Calorimeter MC: independent of fillEventMC() — calo MC products do not
       // require simParticles/primaryParticle so calo-only jobs can enable this
       // while keeping mc.fill false.
@@ -837,7 +841,7 @@ namespace mu2e {
           hTrkQualMetadata->GetXaxis()->SetBinLabel(++iTrkQualAlgorithm, metadataLabel);
           hTrkQualMetadata->SetBinContent(iTrkQualAlgorithm, 1);
         }
-        for (size_t i_trkPIDTag = 0; i_trkPIDTag < i_trkFitConfig.trkPIDTags().size(); ++i_trkPIDTag) {
+        for (size_t i_trkPIDTag = 0; fillTrkPID() && i_trkPIDTag < i_trkFitConfig.trkPIDTags().size(); ++i_trkPIDTag) {
           std::string branchname = "pid";
           if (i_trkPIDTag > 0) branchname += std::to_string(i_trkPIDTag+1);
           _ntuple->Branch((branch+branchname+'.').c_str(),&_allTrkPIDResults.at(i_trk_fit_branch).at(i_trkPIDTag),_buffsize,_splitlevel);
@@ -1184,10 +1188,12 @@ namespace mu2e {
         _allRQCHs.push_back(selectedRQCHs);
 
         std::vector<art::Handle<MVAResultCollection>> trkPIDCollHandles;
-        for (const auto& i_trkPIDTag : i_trkFitConfig.trkPIDTags()) {
-          art::Handle<MVAResultCollection> trkPIDCollHandle;
-          event.getByLabel(i_trkPIDTag,trkPIDCollHandle);
-          trkPIDCollHandles.push_back(trkPIDCollHandle);
+        if(fillTrkPID()) { // if not filling, pass no handles
+          for (const auto& i_trkPIDTag : i_trkFitConfig.trkPIDTags()) {
+            art::Handle<MVAResultCollection> trkPIDCollHandle;
+            event.getByLabel(i_trkPIDTag,trkPIDCollHandle);
+            trkPIDCollHandles.push_back(trkPIDCollHandle);
+          }
         }
         _allTrkPIDCHs.emplace_back(trkPIDCollHandles);
       }
