@@ -31,6 +31,9 @@ In case the track is reflected (it has an upstream leg and a downstream leg), th
 
 If a Kalman fit fails or there are multiple downstream tracks to fit, the number of element may vary.
 
+The field-on ```from_mcs-*``` fcls also store the online (trigger) tracks in the ```trigapr```, ```trigaprue```, and ```trigcalde``` branches, with the same structure as ```trk```.
+The trigger fits carry no surface intersections, so only the ```<name>``` and ```<name>calohit``` branches are filled: ```<name>segs``` and ```<name>segpars_*``` are always empty, and there is no MC truth, quality, PID, or DtDt information.
+
 | branch | structure | explanation | leaf information |
 |--------|-----------|-------------|------------------|
 | trk |  Vector branch |   information about the reconstructed track| [see TrkInfo.hh](../inc/TrkInfo.hh)
@@ -40,6 +43,9 @@ If a Kalman fit fails or there are multiple downstream tracks to fit, the number
 | trkdtdt |  Vector branch |   Result of track dt_hit / dt_trk fit| [see TrkDtDtInfo.hh](../inc/TrkDtDtInfo.hh)
 | trkqual |  Vector branch |   the output of a multi-variate analysis (MVA)| [see MVAResultInfo.hh](../inc/MVAResultInfo.hh)
 | trkpid |  Vector branch |   the output of a multi-variate analysis (MVA)| [see MVAResultInfo.hh](../inc/MVAResultInfo.hh)
+
+```trkdtdt``` and ```trkpid``` are controlled by ```trk.fillTrkDtDt``` and ```trk.fillTrkPID```. The TrkPID MVA uses the dt_hit / dt_trk fit as an input, so the ```TrkPID``` producer needs ```TrkDtDt``` even when ```trkdtdt``` is not stored. To run without either, set both flags to false and remove ```TrkPIDPath``` (```TrkDtDt```, ```TrkPID```) from the path.
+
 ## Track segments Branches
 
 These branches contain 4 elements per event corresponding to different Kalman fit hypotheses (see Track branches).
@@ -91,8 +97,10 @@ The branch is empty if there are no time clusters during the event.
 |--------|-----------|-------------|------------------|
 | timeclusters |  Vector branch |   Information in a reconstructed time cluster| [see TimeClusterInfo.hh](../inc/TimeClusterInfo.hh)
 | lineseeds |  Vector branch |   Information in a reconstructed line seed (cosmic track seed)| [see LineSeedInfo.hh](../inc/LineSeedInfo.hh)
-| timeclustershits |  Vector-of-vector branch |   Basic information about a combo hit associated with a time cluster or a line seed| [see ComboHitInfo.hh](../inc/ComboHitInfo.hh)
-| lineseedshits |  Vector-of-vector branch |   Basic information about a combo hit associated with a time cluster or a line seed| [see ComboHitInfo.hh](../inc/ComboHitInfo.hh)
+| helices |  Vector branch |   Information in a reconstructed helix seed; one branch per configured collection (`helices.names`), e.g. Offline and Online results| [see HelixInfo.hh](../inc/HelixInfo.hh)
+| timeclustershits |  Vector-of-vector branch |   Basic information about a combo hit associated with a time cluster, line seed, or helix seed| [see ComboHitInfo.hh](../inc/ComboHitInfo.hh)
+| lineseedshits |  Vector-of-vector branch |   Basic information about a combo hit associated with a time cluster, line seed, or helix seed| [see ComboHitInfo.hh](../inc/ComboHitInfo.hh)
+| heliceshits |  Vector-of-vector branch |   Basic information about a combo hit associated with a time cluster, line seed, or helix seed| [see ComboHitInfo.hh](../inc/ComboHitInfo.hh)
 ## Calorimeter Branches
 
 These branches are vectors of calorimeter clusters/hits/recodigis/digis that happened during the event.

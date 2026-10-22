@@ -195,7 +195,10 @@ namespace mu2e {
       struct HelixConfig {
         using Name=fhicl::Name;
         using Comment=fhicl::Comment;
-        fhicl::Atom<bool> fill{Name("fill"), Comment("Fill helix seed branches")};
+        fhicl::Atom<bool>              fill {Name("fill") , Comment("Fill helix seed branches")};
+        fhicl::Sequence<art::InputTag> tags {Name("tags") , Comment("Tags for helix seed collections, e.g. Offline and Online reconstruction results")};
+        fhicl::Sequence<std::string>   names{Name("names"), Comment("Names for output helix branches, one per tag")};
+        fhicl::Sequence<std::string>   fillHitsFor{Name("fillHitsFor"), Comment("Entries of names to fill a <name>hits branch for, with the combo hits of each helix"), std::vector<std::string>{}};
       };
 
       // ── Time cluster config (independent of per-branch track config) ───────
@@ -543,8 +546,11 @@ namespace mu2e {
       std::vector<CrvWaveformInfo> _crvdigis;
       std::vector<CrvHitInfoMC> _crvpulsesmc;
       std::vector<CrvHitInfoReco> _crvrecoinfo;
-      // helices
-      std::vector<HelixInfo> _hinfos;
+      // helices, one entry per configured collection
+      std::map<size_t, art::Handle<HelixSeedCollection>> _hcsHandles;
+      std::map<size_t, std::vector<HelixInfo>> _hinfos;
+      std::map<size_t, std::vector<std::vector<EventNtupleComboHitInfo>>> _hHitIs;
+      std::map<size_t, std::string> _hcsNames;
       // struct helpers
       InfoStructHelper _infoStructHelper;
       InfoMCStructHelper _infoMCStructHelper;
@@ -573,6 +579,15 @@ namespace mu2e {
       bool fillTrkMC(const TrkFitOptConfig& opt) const {
         return _conf.trk().fill() && _conf.mc().fill() && _conf.trk().mc().fill() && opt.fillmc();
       }
+
+      // TrkDtDt: the global flag, plus a DtDt collection configured for this fit (none exists for e.g. online tracks)
+      bool fillTrkDtDt(TrkFitBranchIndex i_trk_fit_branch) const {
+        return _conf.trk().fillTrkDtDt() && !_allTrkFitBranches.at(i_trk_fit_branch).trkDtDtTag().empty();
+      }
+
+      // TrkPID: the global flag gates the trkPIDTags of every fit. The TrackPID producer itself needs the
+      // KalSeedDtDt collection, so turning this off (and dropping TrkPIDPath) removes the TrkDtDt dependency
+      bool fillTrkPID() const { return _conf.trk().fillTrkPID(); }
 
       // Calorimeter MC: independent of fillEventMC() — calo MC products do not
       // require simParticles/primaryParticle so calo-only jobs can enable this
@@ -644,6 +659,25 @@ namespace mu2e {
         _tcIs[index] = std::vector<EventNtupleTimeClusterInfo>();
         _tcsHandles[index] = art::Handle<TimeClusterCollection>();
         _tcsNames[index] = _conf.timeclusters().names().at(index) + std::string(".");
+      }
+    }
+
+    // Setup the helix collection list if requested
+    if(_conf.helices().fill()) {
+      const size_t nhcs = _conf.helices().tags().size();
+      if(_conf.helices().names().size() != nhcs)
+        throw cet::exception("EventNtuple") << "Helix input tags and output names must match in size";
+      const auto hnames = _conf.helices().names();
+      const auto hhits = _conf.helices().fillHitsFor();
+      for(const auto& name : hhits)
+        if(std::find(hnames.begin(), hnames.end(), name) == hnames.end())
+          throw cet::exception("EventNtuple") << "helices.fillHitsFor entry " << name << " is not in helices.names";
+      for(size_t index = 0; index < nhcs; ++index) {
+        if(std::find(hhits.begin(), hhits.end(), hnames.at(index)) != hhits.end())
+          _hHitIs[index] = std::vector<std::vector<EventNtupleComboHitInfo>>();
+        _hinfos[index] = std::vector<HelixInfo>();
+        _hcsHandles[index] = art::Handle<HelixSeedCollection>();
+        _hcsNames[index] = hnames.at(index) + std::string(".");
       }
     }
 
@@ -791,7 +825,7 @@ namespace mu2e {
         if(_ftype == LoopHelix)    _ntuple->Branch((branch+"segpars_lh.").c_str(),&_allLHIs.at(i_trk_fit_branch),_buffsize,_splitlevel);
         if(_ftype == CentralHelix) _ntuple->Branch((branch+"segpars_ch.").c_str(),&_allCHIs.at(i_trk_fit_branch),_buffsize,_splitlevel);
         if(_ftype == KinematicLine) _ntuple->Branch((branch+"segpars_kl.").c_str(),&_allKLIs.at(i_trk_fit_branch),_buffsize,_splitlevel);
-        if(_conf.trk().fillTrkDtDt()) {
+        if(fillTrkDtDt(i_trk_fit_branch)) {
           _ntuple->Branch((branch+"dtdt.").c_str(),&_allTDtDtIs.at(i_trk_fit_branch),_buffsize,_splitlevel);
         }
 
@@ -809,7 +843,7 @@ namespace mu2e {
           hTrkQualMetadata->GetXaxis()->SetBinLabel(++iTrkQualAlgorithm, metadataLabel);
           hTrkQualMetadata->SetBinContent(iTrkQualAlgorithm, 1);
         }
-        for (size_t i_trkPIDTag = 0; i_trkPIDTag < i_trkFitConfig.trkPIDTags().size(); ++i_trkPIDTag) {
+        for (size_t i_trkPIDTag = 0; fillTrkPID() && i_trkPIDTag < i_trkFitConfig.trkPIDTags().size(); ++i_trkPIDTag) {
           std::string branchname = "pid";
           if (i_trkPIDTag > 0) branchname += std::to_string(i_trkPIDTag+1);
           _ntuple->Branch((branch+branchname+'.').c_str(),&_allTrkPIDResults.at(i_trk_fit_branch).at(i_trkPIDTag),_buffsize,_splitlevel);
@@ -938,7 +972,15 @@ namespace mu2e {
       _ntuple->Branch("crvcosmic.",&_crvInference,_buffsize,_splitlevel);
     }
     // helix info
-    if(_conf.helices().fill()) _ntuple->Branch("helices.",&_hinfos,_buffsize,_splitlevel);
+    if(_conf.helices().fill()) {
+      for(size_t index = 0; index < _conf.helices().tags().size(); ++index) {
+        _ntuple->Branch(_hcsNames[index].c_str(),&_hinfos[index],_buffsize,_splitlevel);
+        if(_hHitIs.count(index)) {
+          const std::string hits_name = _conf.helices().names().at(index) + "hits.";
+          _ntuple->Branch(hits_name.c_str(),&_hHitIs[index],_buffsize,_splitlevel);
+        }
+      }
+    }
 
     // global MC step branches (all steps, not per-track)
     if(fillEventMC()){
@@ -1083,7 +1125,8 @@ namespace mu2e {
     _primaryInfos.clear();
 
     // clear the vector branches
-    _hinfos.clear();
+    for(auto& [index, infos] : _hinfos) infos.clear();
+    for(auto& [index, infos] : _hHitIs) infos.clear();
 
     // update timing maps for MC
     if(fillEventMC()){
@@ -1104,13 +1147,6 @@ namespace mu2e {
     _allTrkPIDCHs.clear();
     _allKSDtDtHs.clear();
 
-    art::Handle<KalHelixAssns> khaH;
-    if(_conf.helices().fill()){
-      TrkFitConfig i_trkFitConfig = _allTrkFitBranches.at(0);
-      art::InputTag kalSeedInputTag = i_trkFitConfig.input();
-      event.getByLabel(kalSeedInputTag,khaH);
-    }
-
     if (_conf.trk().fill()) {
       for (TrkFitBranchIndex i_trk_fit_branch = 0; i_trk_fit_branch < _allTrkFitBranches.size(); ++i_trk_fit_branch) {
         TrkFitConfig i_trkFitConfig = _allTrkFitBranches.at(i_trk_fit_branch);
@@ -1129,7 +1165,7 @@ namespace mu2e {
         _allKSPCHs.push_back(kalSeedPtrCollHandle);
 
         art::Handle<KalSeedDtDtCollection> kalSeedDtDtCollHandle;
-        if(_conf.trk().fillTrkDtDt()) { // if not filling, pass invalid handle
+        if(fillTrkDtDt(i_trk_fit_branch)) { // if not filling, pass invalid handle
           art::InputTag kalSeedDtDtInputTag = i_trkFitConfig.trkDtDtTag();
           event.getByLabel(kalSeedDtDtInputTag,kalSeedDtDtCollHandle);
         }
@@ -1154,10 +1190,12 @@ namespace mu2e {
         _allRQCHs.push_back(selectedRQCHs);
 
         std::vector<art::Handle<MVAResultCollection>> trkPIDCollHandles;
-        for (const auto& i_trkPIDTag : i_trkFitConfig.trkPIDTags()) {
-          art::Handle<MVAResultCollection> trkPIDCollHandle;
-          event.getByLabel(i_trkPIDTag,trkPIDCollHandle);
-          trkPIDCollHandles.push_back(trkPIDCollHandle);
+        if(fillTrkPID()) { // if not filling, pass no handles
+          for (const auto& i_trkPIDTag : i_trkFitConfig.trkPIDTags()) {
+            art::Handle<MVAResultCollection> trkPIDCollHandle;
+            event.getByLabel(i_trkPIDTag,trkPIDCollHandle);
+            trkPIDCollHandles.push_back(trkPIDCollHandle);
+          }
         }
         _allTrkPIDCHs.emplace_back(trkPIDCollHandles);
       }
@@ -1269,15 +1307,24 @@ namespace mu2e {
         for (size_t i_kseedptr = 0; i_kseedptr < kseedptr_coll.size(); ++i_kseedptr) {
           resetTrackBranches();
           fillTrackBranches(kseedptr_coll_h, i_trk_fit_branch, i_kseedptr);
-          if(_conf.helices().fill()){
-            auto const& khassns = khaH.product();
-            auto hptr = (*khassns)[i_kseedptr].second;
-            _infoStructHelper.fillHelixInfo(hptr, _hinfos);
-          }
           ntrks++;
         }
       }
     }
+    // Helix seeds
+    if(_conf.helices().fill()) {
+      for(size_t index = 0; index < _conf.helices().tags().size(); ++index) {
+        const bool fillHits = _hHitIs.count(index);
+        event.getByLabel(_conf.helices().tags().at(index),_hcsHandles.at(index));
+        if(_hcsHandles[index].isValid()) {
+          for(const auto& hseed : *(_hcsHandles[index])) {
+            _infoStructHelper.fillHelixInfo(hseed, _hinfos.at(index));
+            if(fillHits) _infoStructHelper.fillHelixHitInfo(hseed, _hHitIs.at(index));
+          }
+        }
+      }
+    }
+
     // Time clusters
     if(_conf.timeclusters().fill()) {
       const size_t ntcs = _conf.timeclusters().tags().size();
@@ -1686,7 +1733,7 @@ namespace mu2e {
       _infoStructHelper.fillMatInfo(kseed, _allTSMIs.at(i_trk_fit_branch));
     }
 
-    if(_conf.trk().fillTrkDtDt()) {
+    if(fillTrkDtDt(i_trk_fit_branch)) {
       auto handle = _allKSDtDtHs.at(i_trk_fit_branch);
       if(handle.isValid()) {
         if(i_kseedptr >= handle->size()) throw cet::exception("EventNtuple")
