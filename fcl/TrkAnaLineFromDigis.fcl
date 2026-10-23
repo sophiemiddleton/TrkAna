@@ -37,7 +37,6 @@ physics :
     TrkAnaLine : {
       @table::EventNtupleMaker
       FitType : KinematicLine
-      diagLevel : 2
       FillTriggerInfo : false
     }
 
