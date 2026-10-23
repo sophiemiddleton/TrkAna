@@ -7,7 +7,6 @@ BEGIN_PROLOG
 EN : {
   @table::EventNtupleMaker
   FitType : LoopHelix
-  diagLevel : 2
   FillTriggerInfo : false
 }
 EN.trk.fillHits : false

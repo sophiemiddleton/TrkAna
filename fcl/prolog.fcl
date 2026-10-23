@@ -300,7 +300,6 @@ EventNtupleMaker : {
   module_type : EventNtupleMaker
 
   # Debugging and diagnostics
-  diagLevel : 0
   debugLevel : 0
 
   # ROOT TTree parameters
@@ -448,7 +447,6 @@ EventNtupleMaker : {
 # instance for processing trigger (digitization) output from simulation
 EventNtupleMakerTTMC : {
   @table::EventNtupleMaker
-  diagLevel : 2
   FillTriggerInfo : true
   FitType : LoopHelix
 }

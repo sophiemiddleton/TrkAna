@@ -356,7 +356,6 @@ namespace mu2e {
         using Comment=fhicl::Comment;
 
         // General control
-        fhicl::Atom<int> diag{Name("diagLevel")};
         fhicl::Atom<int> debug{Name("debugLevel")};
         fhicl::Atom<int> splitlevel{Name("splitlevel")};
         fhicl::Atom<int> buffsize{Name("buffsize")};
@@ -849,7 +848,7 @@ namespace mu2e {
           _ntuple->Branch((branch+branchname+'.').c_str(),&_allTrkPIDResults.at(i_trk_fit_branch).at(i_trkPIDTag),_buffsize,_splitlevel);
         }
         // hit-level branches (global trk.fillHits AND per-branch options.fillHits both required)
-        if(_conf.diag() > 1 || (_conf.trk().fillHits() && i_trkFitConfig.options().fillhits())){
+        if(_conf.trk().fillHits() && i_trkFitConfig.options().fillhits()){
           _ntuple->Branch((branch+"hits.").c_str(),&_allTSHIs.at(i_trk_fit_branch),_buffsize,_splitlevel);
           if (_conf.trk().fillHitCalibs())
             _ntuple->Branch((branch+"hitcalibs.").c_str(),&_allTSHCIs.at(i_trk_fit_branch),_buffsize,_splitlevel);
@@ -862,7 +861,7 @@ namespace mu2e {
           _ntuple->Branch((branch+"mcvd.").c_str(),&_allMCVDInfos.at(i_trk_fit_branch),_buffsize,_splitlevel);
           if(fillCaloTrackMatchMC())
             _ntuple->Branch((branch+"calohitmc.").c_str(),&_allMCTCHIs.at(i_trk_fit_branch),_buffsize,_splitlevel);
-          if(_conf.diag() > 1 || (_conf.trk().fillHits() && i_trkFitConfig.options().fillhits())){
+          if(_conf.trk().fillHits() && i_trkFitConfig.options().fillhits()){
             _ntuple->Branch((branch+"hitsmc.").c_str(),&_allTSHIMCs.at(i_trk_fit_branch),_buffsize,_splitlevel);
           }
           // extra MCStep branches per track type
@@ -1728,7 +1727,7 @@ namespace mu2e {
     if(_ftype == CentralHelix && kseed.centralHelixFit()) _infoStructHelper.fillCentralHelixInfo(kseed,_allCHIs.at(i_trk_fit_branch));
     if(_ftype == KinematicLine && kseed.kinematicLineFit()) _infoStructHelper.fillKinematicLineInfo(kseed,_allKLIs.at(i_trk_fit_branch));
     const TrkFitConfig& trkFitConfig = _allTrkFitBranches.at(i_trk_fit_branch);
-    if(_conf.diag() > 1 || (_conf.trk().fillHits() && trkFitConfig.options().fillhits())){
+    if(_conf.trk().fillHits() && trkFitConfig.options().fillhits()){
       _infoStructHelper.fillHitInfo(kseed, _allTSHIs.at(i_trk_fit_branch), _allTSHCIs.at(i_trk_fit_branch), _conf.trk().fillHitCalibs());
       _infoStructHelper.fillMatInfo(kseed, _allTSMIs.at(i_trk_fit_branch));
     }
@@ -1793,7 +1792,7 @@ namespace mu2e {
           _infoMCStructHelper.fillTrkInfoMC(kseed, kseedmc, _surfaceStepsHandle, _allMCTIs.at(i_trk_fit_branch));
           _infoMCStructHelper.fillVDInfo(kseed, kseedmc, _allMCVDInfos.at(i_trk_fit_branch));
           _infoMCStructHelper.fillAllSimInfos(kseedmc, primary, _allMCSimTIs.at(i_trk_fit_branch), trkFitConfig.options().genealogyDepth(), trkFitConfig.options().matchDepth());
-          if(_conf.diag() > 1 || (_conf.trk().fillHits() && trkFitConfig.options().fillhits())){
+          if(_conf.trk().fillHits() && trkFitConfig.options().fillhits()){
             _infoMCStructHelper.fillHitInfoMCs(kseed,kseedmc, _allTSHIMCs.at(i_trk_fit_branch));
           }
           for(size_t ixt = 0; ixt < _extraMCStepTags.size(); ixt++){
