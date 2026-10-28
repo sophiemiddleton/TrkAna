@@ -185,17 +185,16 @@ MergeKKProducers : {
 }
 MergeKKProducersPath : [ MergeKKAll ]
 
-# Group the fits in MergeKKAll made from the same hits (any direction or particle hypothesis): fills <branch>.id and <branch>.rank
-GroupSameTracks : {
-  module_type : GroupSameTracks
-  KalSeedPtrCollection : "MergeKKAll"
-  MinHitFrac : 0.6 # fraction of shared active hits (relative to the fit with fewer active hits) to be the same track
-  RankMethod : "FitConsistency"
+# Cluster the fits behind MergeKKAll made from the same hits (any direction or particle hypothesis): fills <branch>.id and <branch>.rank
+TrackMatchingAll : {
+  module_type : TrackMatching
+  TrackCollections : @local::MergeKKAll.KalSeedCollections
+  overlapThreshold : 0.5 # shared hits / mean number of hits of the two fits to be the same track
 }
 TrkGroupProducers : {
-  GroupSameTracks : @local::GroupSameTracks
+  TrackMatchingAll : @local::TrackMatchingAll
 }
-TrkGroupPath : [ GroupSameTracks ]
+TrkGroupPath : [ TrackMatchingAll ]
 MergeKKNoFieldPath : [ MergeKKLine ]
 MergeKKOffSpillPath : [ MergeKKOff ]
 MergeKKOnlinePath : [ MergeKKTrigApr, MergeKKTrigAprUe, MergeKKTrigCalDe ]
@@ -254,7 +253,7 @@ All : { input : "MergeKKAll"
   branchname : "trk"
   fill : true
   options : { fillMC : true  fillHits : true genealogyDepth : -1 matchDepth : -1 }
-  trkGroupTag : "GroupSameTracks" # must be made from the same collection as input
+  trkGroupTag : "TrackMatchingAll" # must be made from the KalSeedCollections behind input
   trkQualLeaves : [
     { leafname : ""        inputTag : "TrkQualAll:ANN" modelVersion : "ANN1_v2.0" },
     { leafname : "_bdt" inputTag : "TrkQualAll:BDT" modelVersion : "BDT1_v2.0" }
