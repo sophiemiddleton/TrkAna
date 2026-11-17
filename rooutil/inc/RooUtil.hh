@@ -130,6 +130,9 @@ namespace rooutil {
     std::optional<double> GetGeneratedEvents() const { return GetTotal("n_gen_events"); }
     std::optional<double> GetProcessedEvents() const { return GetTotal("n_proc_events"); }
     std::optional<double> GetCosmicLivetime() const { return GetTotal("cosmic_livetime"); }
+    // total muon captures in the stopping target over all subruns read (the CE normalisation);
+    // for a subset of subruns, sum GetSubRun(i).muCapture->nCap instead
+    std::optional<double> GetMuCaptures() const { return GetTotal("n_mu_captures"); }
 
     std::optional<double> GetRate(double count) const {
       const auto livetime = GetCosmicLivetime();
@@ -348,6 +351,7 @@ namespace rooutil {
       if (subrun->has_gen_event_count) { output_subrun_ntuple->Branch("genEventCount", &subrun->genEventCount); }
       if (subrun->has_proc_event_count) { output_subrun_ntuple->Branch("procEventCount", &subrun->procEventCount); }
       if (subrun->has_cosmic_livetime) { output_subrun_ntuple->Branch("cosmicLivetime", &subrun->cosmicLivetime); }
+      if (subrun->has_mu_capture) { output_subrun_ntuple->Branch("muCapture", subrun->muCapture); }
     }
 
     void FillOutputSubRunNtuple() {
@@ -395,7 +399,7 @@ namespace rooutil {
 
     static const std::vector<std::string>& TotalNames() {
       static const std::vector<std::string> total_names{
-        "n_gen_events", "n_proc_events", "cosmic_livetime"
+        "n_gen_events", "n_proc_events", "cosmic_livetime", "n_mu_captures"
       };
       return total_names;
     }

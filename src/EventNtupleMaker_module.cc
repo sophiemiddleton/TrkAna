@@ -15,6 +15,7 @@
 #include "Offline/MCDataProducts/inc/ProtonBunchTimeMC.hh"
 #include "Offline/MCDataProducts/inc/GenEventCount.hh"
 #include "Offline/MCDataProducts/inc/CosmicLivetime.hh"
+#include "Offline/DataProducts/inc/MuonCaptureNormalization.hh"
 #include "Offline/RecoDataProducts/inc/KalSeed.hh"
 #include "Offline/RecoDataProducts/inc/KalSeedAssns.hh"
 #include "Offline/RecoDataProducts/inc/KalSeedDtDt.hh"
@@ -103,6 +104,7 @@
 #include "EventNtuple/inc/CaloDigiMCInfo.hh"
 #include "Offline/MCDataProducts/inc/CaloShowerSim.hh"
 #include "EventNtuple/inc/SubRunInfo.hh"
+#include "EventNtuple/inc/MuCaptureInfo.hh"
 
 // C++ includes.
 #include <map>
@@ -358,6 +360,7 @@ namespace mu2e {
         fhicl::Table<SubRunBranchConfig> genEventCount{Name("genEventCount"), Comment("Number of generated events (MC)")};
         fhicl::Table<SubRunBranchConfig> procEventCount{Name("procEventCount"), Comment("Number of processed events")};
         fhicl::Table<SubRunBranchConfig> cosmicLivetime{Name("cosmicLivetime"), Comment("Cosmic livetime [s]")};
+        fhicl::Table<SubRunBranchConfig> muCapture{Name("muCapture"), Comment("Muon captures in the stopping target (MuonCaptureNormalization; MC truth or measured). inputTag empty: find it by type")};
       };
 
 
@@ -420,6 +423,7 @@ namespace mu2e {
       TH1I* _hGenEventCount;
       TH1I* _hProcEventCount;
       TH1F* _hCosmicLivetime;
+      TH1D* _hMuCaptures = nullptr;
       // general event info branch
       EventInfo _einfo;
       EventInfoMC _einfomc;
@@ -582,6 +586,7 @@ namespace mu2e {
       long _genEventCount = -1;
       long _procEventCount = 0;
       float _cosmicLivetime = -1.0;
+      mu2e::MuCaptureInfo _muCapture;
 
       // ── Gating helpers ─────────────────────────────────────────────────────
       // Event-level MC gate (simParticles, mcTrajectories, primaryParticle).
@@ -1045,6 +1050,10 @@ namespace mu2e {
         _subrunNtuple->Branch("cosmicLivetime", &_cosmicLivetime, _buffsize, _splitlevel);
       }
 
+      if (_conf.subruns().muCapture().include() && _conf.subruns().muCapture().fillNtuple()) {
+        _subrunNtuple->Branch("muCapture", &_muCapture, _buffsize, _splitlevel);
+      }
+
     }
     if (_conf.subruns().makeTotalsHistograms()) {
       if (_conf.subruns().genEventCount().include() && _conf.subruns().genEventCount().fillTotalsHistogram()) {
@@ -1055,6 +1064,9 @@ namespace mu2e {
       }
       if (fillCosmicLivetime() && _conf.subruns().cosmicLivetime().fillTotalsHistogram()) {
         _hCosmicLivetime = tfs->make<TH1F>("cosmic_livetime", "total cosmic livetime [sec]", 1,0,1);
+      }
+      if (_conf.subruns().muCapture().include() && _conf.subruns().muCapture().fillTotalsHistogram()) {
+        _hMuCaptures = tfs->make<TH1D>("n_mu_captures", "total number of muon captures in the stopping target", 1,0,1);
       }
 
     }
@@ -1110,6 +1122,41 @@ namespace mu2e {
         _cosmicLivetime = cosmicLivetimeHandle->liveTime();
         if (_conf.subruns().makeTotalsHistograms() && _conf.subruns().cosmicLivetime().fillTotalsHistogram()) {
           _hCosmicLivetime->Fill(0.0, _cosmicLivetime);
+        }
+      }
+    }
+
+    if (_conf.subruns().muCapture().include()) {
+      _muCapture.reset(); // a subrun without the product must not inherit the previous values
+      const art::InputTag& tag = _conf.subruns().muCapture().inputTag();
+      art::Handle<MuonCaptureNormalization> muCaptureHandle;
+      if (tag.empty()) {
+        // one per subrun is expected (MC truth from the mixing job, or the DB value for data)
+        std::vector<art::Handle<MuonCaptureNormalization>> handles = subrun.getMany<MuonCaptureNormalization>();
+        if (handles.size() > 1) {
+          cet::exception ex("EventNtuple");
+          ex << "Found " << handles.size() << " MuonCaptureNormalization products in subrun " << subrun.id() << ", set subruns.muCapture.inputTag to one of:";
+          for (const auto& handle : handles) {
+            ex << " " << handle.provenance()->moduleLabel() << ":" << handle.provenance()->productInstanceName();
+          }
+          throw ex;
+        }
+        if (handles.size() == 1) muCaptureHandle = handles.front();
+      } else {
+        subrun.getByLabel<MuonCaptureNormalization>(tag, muCaptureHandle);
+      }
+      if (muCaptureHandle.isValid()) {
+        const auto& norm = *muCaptureHandle;
+        _muCapture.valid = norm.valid();
+        _muCapture.source = static_cast<int>(norm.source());
+        _muCapture.nCap = norm.nCap();
+        _muCapture.nCapErrStat = norm.nCapErrStat();
+        _muCapture.nCapErrSyst = norm.nCapErrSyst();
+        _muCapture.nStop = norm.nStop();
+        _muCapture.pot = norm.pot();
+        _muCapture.nMicrobunches = norm.nMicrobunches();
+        if (_hMuCaptures != nullptr && norm.valid()) {
+          _hMuCaptures->Fill(0.0, norm.nCap());
         }
       }
     }

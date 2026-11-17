@@ -469,6 +469,8 @@ EventNtupleMaker : {
     genEventCount : { include : true inputTag : "genCounter" fillNtuple : true fillTotalsHistogram : true}
     procEventCount : { include : true inputTag : "" fillNtuple : true fillTotalsHistogram : true }
     cosmicLivetime : { include : true inputTag : "" fillNtuple : true fillTotalsHistogram : true }
+    # muon captures per subrun (MuonCaptureNormalization): MC truth from the mixing job, or measured (STM) for data
+    muCapture : { include : true inputTag : "" fillNtuple : true fillTotalsHistogram : true }
   }
 }
 # instance for processing trigger (digitization) output from simulation
